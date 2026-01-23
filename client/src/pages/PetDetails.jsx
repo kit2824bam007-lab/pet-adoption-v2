@@ -1,0 +1,198 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Heart, MapPin, Calendar, Tag, Shield, Activity, Home, Info, ArrowLeft, CheckCircle2 } from 'lucide-react';
+
+const PetDetails = ({ user }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [pet, setPet] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isAdopting, setIsAdopting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  useEffect(() => {
+    // Simulating API call for pet details
+    const fetchPetDetails = async () => {
+      setLoading(true);
+      setTimeout(() => {
+        const pets = [
+          { _id: '1', name: 'Buddy', type: 'Dog', age: 2, location: 'New York', breed: 'Golden Retriever', photo: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=612', description: 'Buddy is a very friendly and energetic Golden Retriever who loves to play catch and go for long walks. He is great with kids and other pets.', homeType: 'House', activityLevel: 'High', careLevel: 'Medium' },
+          { _id: '2', name: 'Luna', type: 'Cat', age: 1, location: 'Brooklyn', breed: 'Siamese', photo: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=1043', description: 'Luna is a beautiful Siamese cat with a calm and affectionate personality. She enjoys lounging in sunny spots and being pampered.', homeType: 'Any', activityLevel: 'Low', careLevel: 'Low' },
+          { _id: '3', name: 'Charlie', type: 'Bird', age: 3, location: 'Queens', breed: 'Parrot', photo: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=687', description: 'Charlie is a smart and talkative parrot who can mimic many sounds. He needs plenty of social interaction and mental stimulation.', homeType: 'Any', activityLevel: 'Medium', careLevel: 'Medium' },
+          { _id: '4', name: 'Max', type: 'Dog', age: 4, location: 'Bronx', breed: 'German Shepherd', photo: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80&w=746', description: 'Max is a loyal and protective German Shepherd. He is well-trained and would make a great companion for an active individual or family.', homeType: 'House', activityLevel: 'High', careLevel: 'High' },
+          { _id: '5', name: 'Bella', type: 'Rabbit', age: 1, location: 'Staten Island', breed: 'Lop', photo: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=687', description: 'Bella is a sweet and gentle Lop rabbit. She loves fresh greens and gentle head rubs.', homeType: 'Any', activityLevel: 'Low', careLevel: 'Low' },
+          { _id: '6', name: 'Daisy', type: 'Dog', age: 2, location: 'Manhattan', breed: 'Beagle', photo: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&q=80&w=694', description: 'Daisy is a curious and friendly Beagle who loves to follow her nose. She is social and gets along well with everyone.', homeType: 'Any', activityLevel: 'Medium', careLevel: 'Medium' },
+        ];
+        const foundPet = pets.find(p => p._id === id);
+        setPet(foundPet);
+        setLoading(false);
+      }, 1000);
+    };
+
+    fetchPetDetails();
+  }, [id]);
+
+  const handleAdopt = () => {
+    setIsAdopting(true);
+    // Simulating adoption process
+    setTimeout(() => {
+      setIsAdopting(false);
+      setShowSuccess(true);
+    }, 2000);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fdf2f8]">
+        <div className="w-16 h-16 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!pet) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fdf2f8] p-4">
+        <h2 className="text-3xl font-black text-gray-900 mb-4">Pet not found</h2>
+        <button 
+          onClick={() => navigate('/')}
+          className="bg-pink-500 text-white px-8 py-3 rounded-xl font-bold hover:bg-pink-600 transition-all"
+        >
+          Back to Home
+        </button>
+      </div>
+    );
+  }
+
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#fdf2f8] p-6">
+        <div className="bg-white rounded-[3rem] p-12 text-center shadow-2xl max-w-xl w-full border border-pink-100">
+          <div className="bg-green-100 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8">
+            <CheckCircle2 size={48} className="text-green-500" />
+          </div>
+          <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight">Congratulations!</h2>
+          <p className="text-gray-600 text-xl font-medium mb-10 leading-relaxed">
+            You've started the adoption process for <span className="text-pink-600 font-bold">{pet.name}</span>! Our team will contact you shortly with the next steps.
+          </p>
+          <button 
+            onClick={() => navigate('/')}
+            className="w-full bg-gray-900 text-white py-5 rounded-2xl font-black text-xl hover:bg-pink-500 transition-all shadow-xl shadow-gray-200"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#fdf2f8] py-12 relative overflow-hidden">
+      {/* Decorative Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-pink-200 rounded-full blur-[120px] opacity-40"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-200 rounded-full blur-[120px] opacity-40"></div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <button 
+          onClick={() => navigate(-1)}
+          className="mb-8 flex items-center space-x-2 text-gray-600 hover:text-pink-600 font-bold transition-colors group"
+        >
+          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+          <span>Back</span>
+        </button>
+
+        <div className="bg-white rounded-[3.5rem] shadow-2xl shadow-gray-200/50 overflow-hidden border border-white flex flex-col lg:flex-row">
+          {/* Image Section */}
+          <div className="lg:w-1/2 h-[500px] lg:h-auto relative">
+            <img 
+              src={pet.photo || `https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=1074`} 
+              alt={pet.name} 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute top-8 left-8 bg-white/90 backdrop-blur-md px-6 py-2 rounded-2xl text-sm font-black text-pink-600 shadow-xl uppercase tracking-widest">
+              {pet.type}
+            </div>
+          </div>
+
+          {/* Details Section */}
+          <div className="lg:w-1/2 p-10 lg:p-16 flex flex-col">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <h1 className="text-5xl lg:text-6xl font-black text-gray-900 mb-4 tracking-tighter">{pet.name}</h1>
+                <div className="flex items-center text-gray-500 font-bold text-lg">
+                  <MapPin size={20} className="text-pink-500 mr-2" />
+                  <span>{pet.location}</span>
+                </div>
+              </div>
+              <button className="bg-pink-50 p-4 rounded-[1.5rem] text-pink-500 hover:bg-pink-500 hover:text-white transition-all shadow-lg shadow-pink-100">
+                <Heart size={28} />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6 mb-10">
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div className="flex items-center space-x-3 text-gray-400 mb-2">
+                  <Calendar size={18} />
+                  <span className="text-xs font-black uppercase tracking-wider">Age</span>
+                </div>
+                <p className="text-xl font-black text-gray-800">{pet.age} Years</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div className="flex items-center space-x-3 text-gray-400 mb-2">
+                  <Tag size={18} />
+                  <span className="text-xs font-black uppercase tracking-wider">Breed</span>
+                </div>
+                <p className="text-xl font-black text-gray-800">{pet.breed || 'Mixed'}</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div className="flex items-center space-x-3 text-gray-400 mb-2">
+                  <Activity size={18} />
+                  <span className="text-xs font-black uppercase tracking-wider">Activity</span>
+                </div>
+                <p className="text-xl font-black text-gray-800">{pet.activityLevel || 'Medium'}</p>
+              </div>
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div className="flex items-center space-x-3 text-gray-400 mb-2">
+                  <Home size={18} />
+                  <span className="text-xs font-black uppercase tracking-wider">Home Type</span>
+                </div>
+                <p className="text-xl font-black text-gray-800">{pet.homeType || 'Any'}</p>
+              </div>
+            </div>
+
+            <div className="mb-10">
+              <h3 className="text-2xl font-black text-gray-900 mb-4 flex items-center">
+                <Info size={24} className="text-pink-500 mr-3" />
+                About {pet.name}
+              </h3>
+              <p className="text-gray-600 text-lg leading-relaxed font-medium">
+                {pet.description || `${pet.name} is a wonderful ${pet.type} looking for a loving home. They are healthy, vaccinated, and ready to meet their new family!`}
+              </p>
+            </div>
+
+            <div className="mt-auto pt-8 border-t border-gray-100 flex flex-col sm:flex-row gap-6">
+              <button 
+                onClick={handleAdopt}
+                disabled={isAdopting}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white py-5 rounded-[2rem] font-black text-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-2xl shadow-pink-200 active:scale-95 flex items-center justify-center space-x-3 disabled:opacity-70"
+              >
+                {isAdopting ? (
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <Heart size={24} fill="currentColor" />
+                    <span>Adopt {pet.name}</span>
+                  </>
+                )}
+              </button>
+              <button className="sm:w-20 bg-gray-900 text-white py-5 rounded-[2rem] font-black text-xl hover:bg-gray-800 transition-all shadow-xl flex items-center justify-center">
+                <Shield size={24} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PetDetails;
