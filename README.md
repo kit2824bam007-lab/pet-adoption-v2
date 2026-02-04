@@ -62,9 +62,9 @@ Backend
 
 📁 Project Structure
 
-petmatch/
+petmatch
 │
-├── client/               # React + Tailwind Frontend
+├── client/ # React + Tailwind Frontend
 │   ├── src/
 │   ├── public/
 │   └── package.json
