@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Dog, Mail, Lock, User, UserPlus } from 'lucide-react';
+import { Dog, Mail, Lock, User, UserPlus, Phone, MapPin } from 'lucide-react';
 
 const API_URL = 'http://localhost:5000/api';
 
 function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -21,15 +23,12 @@ function Register() {
     setLoading(true);
 
     try {
-      try {
-        await axios.post(`${API_URL}/auth/register`, { username, email, password });
-      } catch (err) {
-        console.warn('API register failed, continuing with demo success');
-      }
+      await axios.post(`${API_URL}/auth/register`, { username, email, password, phone, address });
       setSuccess('Registration successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 1500);
     } catch (err) {
-      setError('Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -101,6 +100,40 @@ function Register() {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-bold text-gray-700 ml-1">Phone Number</label>
+              <div className="mt-1 relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Phone className="text-gray-400 group-focus-within:text-pink-500 transition-colors" size={20} />
+                </div>
+                <input
+                  type="tel"
+                  required
+                  className="block w-full pl-12 pr-4 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all sm:text-sm"
+                  placeholder="+1 (555) 000-0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-bold text-gray-700 ml-1">Address</label>
+              <div className="mt-1 relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <MapPin className="text-gray-400 group-focus-within:text-pink-500 transition-colors" size={20} />
+                </div>
+                <input
+                  type="text"
+                  required
+                  className="block w-full pl-12 pr-4 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all sm:text-sm"
+                  placeholder="123 Pet St, City, Country"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
             </div>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart, MapPin, Calendar, Tag, Shield, Activity, Home, Info, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Heart, MapPin, Calendar, Tag, Shield, Activity, Home, Info, ArrowLeft, CheckCircle2, MessageSquare, X, Send } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
 
 const PetDetails = ({ user }) => {
   const { id } = useParams();
@@ -9,36 +12,89 @@ const PetDetails = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [isAdopting, setIsAdopting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
-    // Simulating API call for pet details
     const fetchPetDetails = async () => {
       setLoading(true);
-      setTimeout(() => {
-        const pets = [
-          { _id: '1', name: 'Buddy', type: 'Dog', age: 2, location: 'New York', breed: 'Golden Retriever', photo: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=612', description: 'Buddy is a very friendly and energetic Golden Retriever who loves to play catch and go for long walks. He is great with kids and other pets.', homeType: 'House', activityLevel: 'High', careLevel: 'Medium' },
-          { _id: '2', name: 'Luna', type: 'Cat', age: 1, location: 'Brooklyn', breed: 'Siamese', photo: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=1043', description: 'Luna is a beautiful Siamese cat with a calm and affectionate personality. She enjoys lounging in sunny spots and being pampered.', homeType: 'Any', activityLevel: 'Low', careLevel: 'Low' },
-          { _id: '3', name: 'Charlie', type: 'Bird', age: 3, location: 'Queens', breed: 'Parrot', photo: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=687', description: 'Charlie is a smart and talkative parrot who can mimic many sounds. He needs plenty of social interaction and mental stimulation.', homeType: 'Any', activityLevel: 'Medium', careLevel: 'Medium' },
-          { _id: '4', name: 'Max', type: 'Dog', age: 4, location: 'Bronx', breed: 'German Shepherd', photo: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80&w=746', description: 'Max is a loyal and protective German Shepherd. He is well-trained and would make a great companion for an active individual or family.', homeType: 'House', activityLevel: 'High', careLevel: 'High' },
-          { _id: '5', name: 'Bella', type: 'Rabbit', age: 1, location: 'Staten Island', breed: 'Lop', photo: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=687', description: 'Bella is a sweet and gentle Lop rabbit. She loves fresh greens and gentle head rubs.', homeType: 'Any', activityLevel: 'Low', careLevel: 'Low' },
-          { _id: '6', name: 'Daisy', type: 'Dog', age: 2, location: 'Manhattan', breed: 'Beagle', photo: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&q=80&w=694', description: 'Daisy is a curious and friendly Beagle who loves to follow her nose. She is social and gets along well with everyone.', homeType: 'Any', activityLevel: 'Medium', careLevel: 'Medium' },
-        ];
-        const foundPet = pets.find(p => p._id === id);
-        setPet(foundPet);
+      try {
+        const response = await axios.get(`${API_URL}/pets/${id}`);
+        console.log('Fetched pet details:', response.data.pet);
+        setPet(response.data.pet);
+      } catch (error) {
+        console.error('Error fetching pet details:', error);
+      } finally {
         setLoading(false);
-      }, 1000);
+      }
     };
 
     fetchPetDetails();
   }, [id]);
 
-  const handleAdopt = () => {
+  const handleAdopt = async () => {
+    if (!user) {
+      alert('Please login to adopt a pet');
+      navigate('/login');
+      return;
+    }
     setIsAdopting(true);
-    // Simulating adoption process
-    setTimeout(() => {
-      setIsAdopting(false);
+    try {
+      await axios.post(`${API_URL}/adoption/adopt`, { 
+        petId: id, 
+        userId: user._id || user.id 
+      });
       setShowSuccess(true);
-    }, 2000);
+    } catch (error) {
+      console.error('Adoption error:', error);
+      alert(error.response?.data?.message || 'Failed to process adoption. Please try again.');
+    } finally {
+      setIsAdopting(false);
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert('Please login to message the owner');
+      navigate('/login');
+      return;
+    }
+    if (!message.trim()) return;
+
+    setIsSending(true);
+    try {
+      const receiverId = pet.owner?._id || pet.owner;
+      const senderId = user._id || user.id;
+
+      if (!receiverId) {
+        alert('Could not find pet owner information.');
+        setIsSending(false);
+        return;
+      }
+
+      if (receiverId === senderId) {
+        alert('You cannot message yourself!');
+        setIsSending(false);
+        return;
+      }
+
+      await axios.post(`${API_URL}/messages`, {
+        senderId: senderId,
+        receiverId: receiverId,
+        petId: id,
+        content: message
+      });
+      setShowMessageModal(false);
+      setMessage('');
+      navigate('/messages');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert(error.response?.data?.message || 'Failed to send message. Please try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (loading) {
@@ -104,7 +160,7 @@ const PetDetails = ({ user }) => {
           {/* Image Section */}
           <div className="lg:w-1/2 h-[500px] lg:h-auto relative">
             <img 
-              src={pet.photo || `https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=1074`} 
+              src={pet.image || pet.photo || `https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=1074`} 
               alt={pet.name} 
               className="w-full h-full object-cover"
             />
@@ -172,7 +228,7 @@ const PetDetails = ({ user }) => {
             <div className="mt-auto pt-8 border-t border-gray-100 flex flex-col sm:flex-row gap-6">
               <button 
                 onClick={handleAdopt}
-                disabled={isAdopting}
+                disabled={isAdopting || pet.status === 'adopted'}
                 className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white py-5 rounded-[2rem] font-black text-xl hover:from-pink-600 hover:to-rose-600 transition-all shadow-2xl shadow-pink-200 active:scale-95 flex items-center justify-center space-x-3 disabled:opacity-70"
               >
                 {isAdopting ? (
@@ -180,17 +236,80 @@ const PetDetails = ({ user }) => {
                 ) : (
                   <>
                     <Heart size={24} fill="currentColor" />
-                    <span>Adopt {pet.name}</span>
+                    <span>{pet.status === 'adopted' ? 'Adopted' : `Adopt ${pet.name}`}</span>
                   </>
                 )}
               </button>
-              <button className="sm:w-20 bg-gray-900 text-white py-5 rounded-[2rem] font-black text-xl hover:bg-gray-800 transition-all shadow-xl flex items-center justify-center">
-                <Shield size={24} />
+              <button 
+                onClick={() => {
+                  if (!pet.owner) {
+                    alert('Pet owner information is unavailable.');
+                    return;
+                  }
+                  if (user && (pet.owner?._id === (user._id || user.id) || pet.owner === (user._id || user.id))) {
+                    navigate('/messages');
+                  } else {
+                    setShowMessageModal(true);
+                  }
+                }}
+                disabled={!pet.owner}
+                className={`flex-1 bg-white text-gray-900 py-5 rounded-[2rem] font-black text-xl border-4 border-gray-900 hover:bg-gray-900 hover:text-white transition-all shadow-xl flex items-center justify-center space-x-3 ${!pet.owner ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <MessageSquare size={24} />
+                <span>
+                  {!pet.owner 
+                    ? 'Owner Unavailable'
+                    : user && (pet.owner?._id === (user._id || user.id) || pet.owner === (user._id || user.id)) 
+                    ? 'View Messages' 
+                    : 'Message Owner'}
+                </span>
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden border border-white">
+            <div className="p-8 bg-gradient-to-r from-pink-500 to-rose-500 text-white flex justify-between items-center">
+              <h3 className="text-2xl font-black flex items-center">
+                <MessageSquare className="mr-3" /> Message Owner
+              </h3>
+              <button onClick={() => setShowMessageModal(false)} className="hover:rotate-90 transition-transform">
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleSendMessage} className="p-8">
+              <div className="mb-6">
+                <label className="block text-gray-700 font-bold mb-3 text-lg">Your Message</label>
+                <textarea
+                  required
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={`Hi! I'm interested in adopting ${pet.name}...`}
+                  className="w-full h-40 p-6 bg-gray-50 border-2 border-gray-100 rounded-3xl focus:border-pink-500 focus:ring-0 outline-none transition-all resize-none font-medium text-lg"
+                ></textarea>
+              </div>
+              <button
+                type="submit"
+                disabled={isSending || !message.trim()}
+                className="w-full bg-gray-900 text-white py-5 rounded-2xl font-black text-xl hover:bg-pink-500 transition-all shadow-xl flex items-center justify-center space-x-3 disabled:opacity-50"
+              >
+                {isSending ? (
+                  <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <Send size={24} />
+                    <span>Send Message</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Dog, Search, User, PlusCircle, Sparkles, LogOut, Menu, X, Heart } from 'lucide-react';
+import { Dog, Search, User, PlusCircle, Sparkles, LogOut, Menu, X, Heart, MessageSquare } from 'lucide-react';
 
 const Navbar = ({ user, handleLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +17,8 @@ const Navbar = ({ user, handleLogout }) => {
 
   const navLinks = [
     { name: 'Pet Match', path: '/pet-match', icon: <Sparkles size={20} /> },
-    { name: 'Adopted', path: '/adopted', icon: <Heart size={20} /> },
+    { name: 'Messages', path: '/messages', icon: <MessageSquare size={20} /> },
+    { name: 'Success Stories', path: '/adopted', icon: <Heart size={20} /> },
     { name: 'Add Pet', path: '/add-pet', icon: <PlusCircle size={20} /> },
     { name: 'Profile', path: '/profile', icon: <User size={20} /> },
   ];

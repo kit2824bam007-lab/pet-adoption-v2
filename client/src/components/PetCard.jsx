@@ -10,13 +10,18 @@ const PetCard = ({ pet }) => {
       {/* Photo */}
       <div className="relative h-64 w-full overflow-hidden">
         <img
-          src={pet.photo || `https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=1074`}
+          src={pet.image || pet.photo || `https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=1074`}
           alt={pet.name}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-2xl text-xs font-black text-pink-600 shadow-sm uppercase tracking-wider">
           {pet.type}
         </div>
+        {pet.status === 'adopted' && (
+          <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-md px-4 py-1.5 rounded-2xl text-xs font-black text-white shadow-sm uppercase tracking-wider">
+            Adopted
+          </div>
+        )}
         <button className="absolute bottom-4 right-4 bg-white/90 backdrop-blur-md p-2.5 rounded-2xl text-gray-400 hover:text-pink-500 transition-colors shadow-sm">
           <Heart size={20} />
         </button>

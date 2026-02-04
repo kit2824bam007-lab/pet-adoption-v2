@@ -18,17 +18,12 @@ function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      // For demo purposes, if API fails, allow login with any data
-      try {
-        const response = await axios.post(`${API_URL}/auth/login`, { email, password });
-        onLogin(response.data.user);
-      } catch (err) {
-        console.warn('API login failed, using demo login');
-        onLogin({ _id: 'demo-user', username: email.split('@')[0], email });
-      }
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+      onLogin(response.data.user);
       navigate('/');
     } catch (err) {
-      setError('Login failed. Please try again.');
+      console.error('Login error:', err);
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }

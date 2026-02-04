@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 // Register new user
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, phone, address } = req.body;
 
     // Check if user already exists by email or username
     const existingEmail = await User.findOne({ email });
@@ -21,7 +21,9 @@ exports.register = async (req, res) => {
     const user = new User({
       username,
       email,
-      password
+      password,
+      phone,
+      address
     });
 
     await user.save();
@@ -31,7 +33,11 @@ exports.register = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        profile: user.profile,
+        preferences: user.preferences
       }
     });
   } catch (error) {
@@ -67,6 +73,10 @@ exports.login = async (req, res) => {
         _id: user._id,
         username: user.username,
         email: user.email,
+        phone: user.phone,
+        address: user.address,
+        profile: user.profile,
+        preferences: user.preferences,
         adoptedPets: user.adoptedPets
       }
     });
@@ -98,11 +108,11 @@ exports.getUserById = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const { profile, preferences } = req.body;
+    const { profile, preferences, phone, address } = req.body;
 
     const user = await User.findByIdAndUpdate(
       id,
-      { profile, preferences },
+      { profile, preferences, phone, address },
       { new: true }
     ).select('-password');
 

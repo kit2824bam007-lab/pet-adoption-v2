@@ -12,6 +12,14 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  phone: {
+    type: String,
+    default: ''
+  },
+  address: {
+    type: String,
+    default: ''
+  },
   password: {
     type: String,
     required: true
@@ -30,6 +38,11 @@ const userSchema = new mongoose.Schema({
   adoptedPets: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Pet'
+  }],
+  notifications: [{
+    message: { type: String, required: true },
+    isRead: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
   }]
 }, {
   timestamps: true

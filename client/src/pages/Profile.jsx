@@ -1,30 +1,73 @@
-import React, { useState } from 'react';
-import { User, Home, Users, Clock, Star, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Home, Users, Clock, Star, Save, Phone, MapPin, Bell } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
 
 const Profile = ({ user }) => {
+  const [notifications, setNotifications] = useState([]);
   const [formData, setFormData] = useState({
     username: user?.username || 'John Doe',
     email: user?.email || 'john@example.com',
-    homeType: 'Apartment',
-    kidsAtHome: 'No',
-    dailyFreeTime: '2-4 hours',
-    experienceLevel: 'Intermediate'
+    phone: user?.phone || '',
+    address: user?.address || '',
+    homeType: user?.profile?.homeType || 'Apartment',
+    kidsAtHome: user?.profile?.hasKids ? 'Yes' : 'No',
+    dailyFreeTime: user?.profile?.freeTime || 'Medium',
+    experienceLevel: user?.profile?.petExperience || 'Beginner'
   });
 
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/auth/user/${user._id || user.id}`);
+        setNotifications(response.data.user.notifications || []);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+
+    if (user) {
+      fetchNotifications();
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    
+    try {
+      const updateData = {
+        phone: formData.phone,
+        address: formData.address,
+        profile: {
+          homeType: formData.homeType,
+          hasKids: formData.kidsAtHome === 'Yes',
+          freeTime: formData.dailyFreeTime,
+          petExperience: formData.experienceLevel
+        }
+      };
+
+      await axios.put(`${API_URL}/auth/profile/${user._id || user.id}`, updateData);
+      
+      // Update local storage if needed
+      const updatedUser = { ...user, ...updateData };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
       alert('Profile updated successfully!');
-    }, 1000);
+    } catch (err) {
+      console.error('Update profile error:', err);
+      alert('Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -57,6 +100,38 @@ const Profile = ({ user }) => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-10 lg:p-14 space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {/* Phone */}
+              <div className="space-y-3">
+                <label className="flex items-center text-sm font-bold text-gray-700 space-x-2 uppercase tracking-wider ml-1">
+                  <Phone size={18} className="text-pink-500" />
+                  <span>Phone Number</span>
+                </label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+1 (555) 000-0000"
+                  className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-bold shadow-sm"
+                />
+              </div>
+
+              {/* Address */}
+              <div className="space-y-3">
+                <label className="flex items-center text-sm font-bold text-gray-700 space-x-2 uppercase tracking-wider ml-1">
+                  <MapPin size={18} className="text-pink-500" />
+                  <span>Address</span>
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="123 Pet St, City, Country"
+                  className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-bold shadow-sm"
+                />
+              </div>
+
               {/* Home Type */}
               <div className="space-y-3">
                 <label className="flex items-center text-sm font-bold text-gray-700 space-x-2 uppercase tracking-wider ml-1">
@@ -145,6 +220,36 @@ const Profile = ({ user }) => {
               </button>
             </div>
           </form>
+
+          {/* Notifications Section */}
+          <div className="border-t border-gray-100 bg-gray-50/50 p-10 lg:p-14">
+            <h2 className="text-2xl font-black text-gray-900 mb-8 flex items-center">
+              <Bell size={24} className="text-pink-500 mr-3" />
+              Notifications
+            </h2>
+            <div className="space-y-4">
+              {notifications.length > 0 ? (
+                notifications.slice().reverse().map((notif, index) => (
+                  <div key={index} className="bg-white p-6 rounded-[1.5rem] border border-gray-100 shadow-sm flex items-start space-x-4">
+                    <div className="bg-pink-100 p-2 rounded-xl mt-1">
+                      <Bell size={18} className="text-pink-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-800 font-bold">{notif.message}</p>
+                      <p className="text-gray-400 text-xs mt-1">
+                        {new Date(notif.createdAt).toLocaleDateString()} at {new Date(notif.createdAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-10 bg-white rounded-[2rem] border-2 border-dashed border-gray-200">
+                  <Bell size={48} className="text-gray-200 mx-auto mb-4" />
+                  <p className="text-gray-400 font-bold text-lg">No notifications yet!</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

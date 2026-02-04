@@ -11,4 +11,7 @@ router.get('/user/:userId', adoptionController.getUserAdoptions);
 // GET /api/adoption/all - Get all adoptions
 router.get('/all', adoptionController.getAllAdoptions);
 
+// POST /api/adoption/unadopt - Unadopt a pet
+router.post('/unadopt', adoptionController.unadoptPet);
+
 module.exports = router;

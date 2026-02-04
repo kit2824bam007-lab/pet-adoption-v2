@@ -13,6 +13,10 @@ const petSchema = new mongoose.Schema({
     type: String,
     default: 'Mixed'
   },
+  location: {
+    type: String,
+    required: true
+  },
   age: {
     type: Number,
     required: true
@@ -41,6 +45,19 @@ const petSchema = new mongoose.Schema({
   },
   description: {
     type: String
+  },
+  contactEmail: {
+    type: String,
+    required: true
+  },
+  contactPhone: {
+    type: String,
+    required: true
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   status: {
     type: String,

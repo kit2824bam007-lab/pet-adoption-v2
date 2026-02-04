@@ -1,22 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Heart, RefreshCw, Info } from 'lucide-react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import PetCard from '../components/PetCard';
+
+const API_URL = 'http://localhost:5000/api';
 
 const PetMatch = ({ user }) => {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Simulating matching algorithm based on user profile
     const fetchMatches = async () => {
+      if (!user) return;
       setLoading(true);
-      setTimeout(() => {
-        setMatches([
-          { _id: '1', name: 'Buddy', type: 'Dog', age: 2, location: 'New York', breed: 'Golden Retriever', photo: '' },
-          { _id: '4', name: 'Max', type: 'Dog', age: 4, location: 'Bronx', breed: 'German Shepherd', photo: '' },
-        ]);
+      try {
+        const response = await axios.get(`${API_URL}/pets/recommendations/${user._id || user.id}`);
+        setMatches(response.data.pets);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     };
 
     fetchMatches();
@@ -57,7 +63,10 @@ const PetMatch = ({ user }) => {
               <div className="w-3 h-3 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.5)]"></div>
               <span className="font-bold text-gray-700">Medium Activity</span>
             </div>
-            <button className="text-pink-600 font-black hover:text-rose-600 flex items-center space-x-2 transition-colors bg-pink-50/50 px-6 py-3 rounded-2xl border-2 border-pink-100 hover:border-pink-200">
+            <button 
+              onClick={() => navigate('/profile')}
+              className="text-pink-600 font-black hover:text-rose-600 flex items-center space-x-2 transition-colors bg-pink-50/50 px-6 py-3 rounded-2xl border-2 border-pink-100 hover:border-pink-200"
+            >
               <RefreshCw size={18} className="animate-spin-slow" />
               <span>Update Preferences</span>
             </button>
@@ -88,7 +97,10 @@ const PetMatch = ({ user }) => {
                 <p className="text-gray-500 mb-8 font-medium leading-relaxed">
                   Refine your profile details to get even better recommendations tailored for you.
                 </p>
-                <button className="bg-white text-pink-600 px-8 py-4 rounded-[1.5rem] font-black hover:bg-pink-600 hover:text-white transition-all shadow-xl shadow-pink-200/50 border-2 border-pink-100 hover:border-pink-600">
+                <button 
+                  onClick={() => navigate('/profile')}
+                  className="bg-white text-pink-600 px-8 py-4 rounded-[1.5rem] font-black hover:bg-pink-600 hover:text-white transition-all shadow-xl shadow-pink-200/50 border-2 border-pink-100 hover:border-pink-600"
+                >
                   Refine Profile
                 </button>
               </div>

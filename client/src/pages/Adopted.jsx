@@ -1,43 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import PetCard from '../components/PetCard';
-import { Search, RefreshCcw, LayoutGrid, Heart } from 'lucide-react';
+import { Search, RefreshCcw, LayoutGrid, Heart, Sparkles, XCircle } from 'lucide-react';
 
-// Placeholder API Service
-const petService = {
-  getPets: async () => {
-    // Simulating API call for adoptable pets
-    return [
-      { _id: '1', name: 'Buddy', type: 'Dog', age: 2, location: 'New York', breed: 'Golden Retriever', photo: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=612' },
-      { _id: '2', name: 'Luna', type: 'Cat', age: 1, location: 'Brooklyn', breed: 'Siamese', photo: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=1043' },
-      { _id: '3', name: 'Charlie', type: 'Bird', age: 3, location: 'Queens', breed: 'Parrot', photo: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=687' },
-      { _id: '4', name: 'Max', type: 'Dog', age: 4, location: 'Bronx', breed: 'German Shepherd', photo: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80&w=746' },
-      { _id: '5', name: 'Bella', type: 'Rabbit', age: 1, location: 'Staten Island', breed: 'Lop', photo: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=687' },
-      { _id: '6', name: 'Daisy', type: 'Dog', age: 2, location: 'Manhattan', breed: 'Beagle', photo: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&q=80&w=694' },
-    ];
+const API_URL = 'http://localhost:5000/api';
+
+// API Service
+const adoptionService = {
+  getAdoptions: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/adoption/all`);
+      // Map adoptions to include pet data and user info
+      return response.data.map(adoption => ({
+        ...adoption.pet,
+        petDetails: adoption.pet, // Keep a reference to original pet object
+        adoptedBy: adoption.user?.username || 'Someone',
+        adopterId: adoption.user?._id || adoption.user?.id
+      }));
+    } catch (error) {
+      console.error('Error fetching adoptions:', error);
+      return [];
+    }
   }
 };
 
-const Adopted = () => {
+const Adopted = ({ user }) => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isUnadopting, setIsUnadopting] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchPets = async () => {
-      setLoading(true);
-      try {
-        const data = await petService.getPets();
-        setPets(data);
-      } catch (error) {
-        console.error('Error fetching pets:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchPets = async () => {
+    setLoading(true);
+    try {
+      const data = await adoptionService.getAdoptions();
+      setPets(data);
+    } catch (error) {
+      console.error('Error fetching adopted pets:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPets();
   }, []);
+
+  const handleUnadopt = async (pet) => {
+    if (!window.confirm(`Are you sure you want to unadopt ${pet.name || 'this pet'}?`)) return;
+    
+    setIsUnadopting(true);
+    const userId = user._id || user.id;
+    const petId = pet.petDetails?._id || pet._id;
+
+    console.log('Attempting unadoption:', { userId, petId });
+
+    try {
+      await axios.post(`${API_URL}/adoption/unadopt`, {
+        userId,
+        petId
+      });
+      alert('Unadoption successful!');
+      fetchPets(); // Refresh the list
+    } catch (error) {
+      console.error('Unadoption error:', error);
+      const msg = error.response?.data?.message || 'Failed to unadopt pet';
+      alert(msg);
+    } finally {
+      setIsUnadopting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#fdf2f8] relative overflow-hidden">
@@ -49,23 +82,23 @@ const Adopted = () => {
         {/* Header Section */}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center p-5 bg-white/50 backdrop-blur-xl rounded-[2rem] mb-6 shadow-xl shadow-pink-100 border border-white/50 transform hover:rotate-12 transition-transform cursor-default">
-            <Heart className="text-pink-600" size={40} fill="currentColor" />
+            <Sparkles className="text-pink-600" size={40} fill="currentColor" />
           </div>
           <h1 className="text-6xl font-black text-gray-900 mb-6 tracking-tight leading-tight">
-            Pets for <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-500">Adoption</span>
+            Happy <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-rose-500">Endings</span>
           </h1>
           <p className="text-gray-600 max-w-3xl mx-auto text-xl font-medium leading-relaxed">
-            Browse our list of lovable companions waiting for their forever homes. Click on any pet to view details and start the adoption process.
+            These adorable companions have found their forever homes. Join our community to start your own success story.
           </p>
         </div>
 
         {/* Content Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
           <div>
-            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Available Companions</h2>
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight">Success Stories</h2>
             <div className="flex items-center mt-2 space-x-2">
-              <div className="h-1.5 w-1.5 bg-pink-500 rounded-full animate-pulse"></div>
-              <p className="text-gray-500 font-medium">Showing {pets.length} adorable companions ready for home</p>
+              <div className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="text-gray-500 font-medium">{pets.length} companions found their forever families</p>
             </div>
           </div>
         </div>
@@ -92,28 +125,45 @@ const Adopted = () => {
             {/* Pets Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
               {pets.map((pet) => (
-                <PetCard key={pet._id} pet={pet} />
+                <div key={pet._id} className="relative group">
+                  <PetCard pet={pet} />
+                  <div className="absolute top-6 right-6 bg-green-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center space-x-2 z-20">
+                    <Heart size={14} fill="currentColor" />
+                    <span>Adopted by {pet.adoptedBy}</span>
+                  </div>
+                  
+                  {/* Unadopt Button - only visible to the adopter */}
+                  {user && (user._id === pet.adopterId || user.id === pet.adopterId) && (
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-[2.5rem] flex items-center justify-center z-30">
+                      <button
+                        onClick={() => handleUnadopt(pet)}
+                        disabled={isUnadopting}
+                        className="bg-white text-red-600 px-8 py-4 rounded-2xl font-black text-lg shadow-2xl transform hover:scale-110 active:scale-95 transition-all flex items-center space-x-3"
+                      >
+                        <XCircle size={24} />
+                        <span>{isUnadopting ? 'Processing...' : 'Unadopt Pet'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
 
             {pets.length === 0 && (
               <div className="bg-white rounded-[3rem] text-center py-24 shadow-xl border border-gray-50">
                 <div className="bg-pink-50 inline-flex p-10 rounded-full mb-8 relative">
-                  <Search size={64} className="text-pink-300" />
-                  <div className="absolute -top-2 -right-2 bg-white p-3 rounded-full shadow-lg">
-                    <LayoutGrid size={24} className="text-pink-500" />
-                  </div>
+                  <Heart size={64} className="text-pink-300" />
                 </div>
-                <h3 className="text-3xl font-black text-gray-900 mb-4">No companions found</h3>
+                <h3 className="text-3xl font-black text-gray-900 mb-4">No stories yet</h3>
                 <p className="text-gray-500 max-w-md mx-auto text-lg leading-relaxed mb-10">
-                  We couldn't find any pets matching your search.
+                  Be the first one to adopt and start a new happy ending!
                 </p>
                 <button 
                   onClick={() => navigate('/')}
                   className="bg-pink-500 text-white px-10 py-4 rounded-2xl font-black text-lg hover:bg-pink-600 transition-all shadow-xl shadow-pink-100 flex items-center justify-center mx-auto space-x-3"
                 >
                   <RefreshCcw size={20} />
-                  <span>View All Pets</span>
+                  <span>View Pets for Adoption</span>
                 </button>
               </div>
             )}

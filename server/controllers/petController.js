@@ -15,35 +15,63 @@ exports.getAllPets = async (req, res) => {
 // Get pet by ID
 exports.getPetById = async (req, res) => {
   try {
-    const pet = await Pet.findById(req.params.id);
+    let pet = await Pet.findById(req.params.id).populate('owner', 'username email phone');
     
     if (!pet) {
       return res.status(404).json({ message: 'Pet not found' });
     }
 
+    // Handle legacy data: If owner is missing, try to find a user with the contact email
+    if (!pet.owner) {
+      const fallbackOwner = await User.findOne({ email: pet.contactEmail });
+      if (fallbackOwner) {
+        // Temporarily assign for this request
+        pet.owner = {
+          _id: fallbackOwner._id,
+          username: fallbackOwner.username,
+          email: fallbackOwner.email,
+          phone: fallbackOwner.phone
+        };
+        
+        // Update the database to fix it permanently
+        await Pet.findByIdAndUpdate(pet._id, { owner: fallbackOwner._id });
+        console.log(`✅ Fixed missing owner for pet ${pet.name} using email ${pet.contactEmail}`);
+      } else {
+        console.warn(`⚠️ Pet ${pet._id} (${pet.name}) has no valid owner and no matching user found for ${pet.contactEmail}`);
+      }
+    }
+
     res.status(200).json({ pet });
   } catch (error) {
     console.error('Get pet error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error: ' + error.message });
   }
 };
 
 // Create new pet
 exports.createPet = async (req, res) => {
   try {
-    const { name, type, breed, age, image, homeType, careLevel, activityLevel, kidFriendly, description } = req.body;
+    const { 
+      name, type, breed, location, age, image, 
+      homeType, careLevel, activityLevel, kidFriendly, 
+      description, contactEmail, contactPhone, owner 
+    } = req.body;
 
     const pet = new Pet({
       name,
       type,
       breed,
+      location,
       age,
       image,
       homeType,
       careLevel,
       activityLevel,
       kidFriendly,
-      description
+      description,
+      contactEmail,
+      contactPhone,
+      owner
     });
 
     await pet.save();
@@ -58,7 +86,7 @@ exports.createPet = async (req, res) => {
       const messages = Object.values(error.errors).map(val => val.message);
       return res.status(400).json({ message: messages.join(', ') });
     }
-    res.status(500).json({ message: 'Server error during pet registration: ' + error.message });
+    res.status(500).json({ message: 'Server error during pet registration: ' + error.message, stack: error.stack });
   }
 };
 
@@ -99,41 +127,41 @@ exports.getRecommendedPets = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const { profile, preferences } = user;
+    const { profile = {}, preferences = {} } = user;
 
     // Build query
     let query = { isAdopted: false };
 
     // Filter by preferred pet types
-    if (preferences.petType && preferences.petType.length > 0) {
+    if (preferences && preferences.petType && preferences.petType.length > 0) {
       query.type = { $in: preferences.petType };
     }
 
     // Filter by kid friendly if user has kids
-    if (profile.hasKids) {
+    if (profile && profile.hasKids) {
       query.kidFriendly = true;
     }
 
     // Home type matching
-    if (profile.homeType === 'Apartment') {
+    if (profile && profile.homeType === 'Apartment') {
       query.homeType = { $in: ['Apartment', 'Any'] };
-    } else if (profile.homeType === 'House') {
+    } else if (profile && profile.homeType === 'House') {
       query.homeType = { $in: ['Apartment', 'House', 'Any'] };
-    } else if (profile.homeType === 'Farm') {
+    } else if (profile && profile.homeType === 'Farm') {
       query.homeType = { $in: ['Apartment', 'House', 'Farm', 'Any'] };
     }
 
     // Activity level matching based on user's free time
-    if (profile.freeTime === 'Low') {
+    if (profile && profile.freeTime === 'Low') {
       query.activityLevel = 'Low';
-    } else if (profile.freeTime === 'Medium') {
+    } else if (profile && profile.freeTime === 'Medium') {
       query.activityLevel = { $in: ['Low', 'Medium'] };
-    } else if (profile.freeTime === 'High') {
+    } else if (profile && profile.freeTime === 'High') {
       query.activityLevel = { $in: ['Low', 'Medium', 'High'] };
     }
 
     // Preferred Age matching
-    if (preferences.preferredAge && preferences.preferredAge !== 'Any') {
+    if (preferences && preferences.preferredAge && preferences.preferredAge !== 'Any') {
       if (preferences.preferredAge === 'Puppy/Kitten') {
         query.age = { $lte: 1 };
       } else if (preferences.preferredAge === 'Adult') {

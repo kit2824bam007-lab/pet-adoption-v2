@@ -2,21 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import PetCard from '../components/PetCard';
 import { Search, Filter, RefreshCcw, Dog, Cat, Bird, Heart, LayoutGrid } from 'lucide-react';
+import axios from 'axios';
 
-// Placeholder API Service
+// API Service
 const petService = {
   getPets: async (filters = {}) => {
-    // Simulating API call
-    console.log('Fetching pets with filters:', filters);
-    // In a real app: return await axios.get('/api/pets', { params: filters });
-    return [
-      { _id: '1', name: 'Buddy', type: 'Dog', age: 2, location: 'New York', breed: 'Golden Retriever', photo: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=612' },
-      { _id: '2', name: 'Luna', type: 'Cat', age: 1, location: 'Brooklyn', breed: 'Siamese', photo: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=1043' },
-      { _id: '3', name: 'Charlie', type: 'Bird', age: 3, location: 'Queens', breed: 'Parrot', photo: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?auto=format&fit=crop&q=80&w=687' },
-      { _id: '4', name: 'Max', type: 'Dog', age: 4, location: 'Bronx', breed: 'German Shepherd', photo: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80&w=746' },
-      { _id: '5', name: 'Bella', type: 'Rabbit', age: 1, location: 'Staten Island', breed: 'Lop', photo: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?auto=format&fit=crop&q=80&w=687' },
-      { _id: '6', name: 'Daisy', type: 'Dog', age: 2, location: 'Manhattan', breed: 'Beagle', photo: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&q=80&w=694' },
-    ];
+    try {
+      const response = await axios.get('http://localhost:5000/api/pets');
+      return response.data.pets;
+    } catch (error) {
+      console.error('Error fetching pets:', error);
+      return [];
+    }
   }
 };
 

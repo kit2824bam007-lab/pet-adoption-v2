@@ -1,20 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import PetCard from '../components/PetCard';
 import { ArrowLeft, Search as SearchIcon } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:5000/api';
 
 const SearchResults = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get('q');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Placeholder search results
-  const results = [
-    { _id: '1', name: 'Buddy', type: 'Dog', age: 2, location: 'New York', breed: 'Golden Retriever', photo: '' },
-  ].filter(p => 
-    p.name.toLowerCase().includes(query?.toLowerCase() || '') ||
-    p.type.toLowerCase().includes(query?.toLowerCase() || '') ||
-    p.location.toLowerCase().includes(query?.toLowerCase() || '')
-  );
+  useEffect(() => {
+    const fetchSearchResults = async () => {
+      if (!query) return;
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_URL}/pets/search/${query}`);
+        setResults(response.data.pets);
+      } catch (error) {
+        console.error('Error searching pets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSearchResults();
+  }, [query]);
 
   return (
     <div className="min-h-screen bg-[#fdf2f8] py-12 relative overflow-hidden">
@@ -40,7 +53,11 @@ const SearchResults = () => {
           </div>
         </div>
 
-        {results.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-12 h-12 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin"></div>
+          </div>
+        ) : results.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {results.map((pet) => (
               <PetCard key={pet._id} pet={pet} />

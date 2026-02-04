@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
 import { Camera, Dog, MapPin, Calendar, FileText, Send, X } from 'lucide-react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const AddPet = () => {
+const AddPet = ({ user }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     type: 'Dog',
+    breed: '',
     age: '',
     location: '',
     description: '',
+    contactEmail: user?.email || '',
+    contactPhone: user?.phone || '',
+    homeType: 'Any',
+    careLevel: 'Medium',
+    activityLevel: 'Medium',
+    kidFriendly: true
   });
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -35,17 +45,32 @@ const AddPet = () => {
     setPhotoPreview(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulating API call
-    setTimeout(() => {
+    
+    try {
+      const petData = {
+        ...formData,
+        age: parseInt(formData.age),
+        image: photoPreview,
+        owner: user?._id || user?.id
+      };
+
+      await axios.post('http://localhost:5000/api/pets', petData);
+      
       setIsSubmitting(false);
       alert('Pet registered successfully!');
       setFormData({ name: '', type: 'Dog', age: '', location: '', description: '' });
       setPhoto(null);
       setPhotoPreview(null);
-    }, 1500);
+      navigate('/');
+    } catch (error) {
+      console.error('Error registering pet:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to register pet. Please try again.';
+      alert(errorMessage);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -125,6 +150,20 @@ const AddPet = () => {
                   </select>
                 </div>
 
+                {/* Breed */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Breed</label>
+                  <input
+                    required
+                    type="text"
+                    name="breed"
+                    value={formData.breed}
+                    onChange={handleChange}
+                    placeholder="e.g. Golden Retriever"
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all placeholder-gray-400 font-medium"
+                  />
+                </div>
+
                 {/* Age */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Age (Years)</label>
@@ -154,6 +193,94 @@ const AddPet = () => {
                       className="w-full pl-12 pr-4 py-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all placeholder-gray-400 font-medium"
                     />
                   </div>
+                </div>
+
+                {/* Home Type */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Required Home Type</label>
+                  <select
+                    name="homeType"
+                    value={formData.homeType}
+                    onChange={handleChange}
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-medium appearance-none"
+                  >
+                    <option value="Any">Any</option>
+                    <option value="Apartment">Apartment</option>
+                    <option value="House">House</option>
+                    <option value="Farm">Farm</option>
+                  </select>
+                </div>
+
+                {/* Care Level */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Care Level</label>
+                  <select
+                    name="careLevel"
+                    value={formData.careLevel}
+                    onChange={handleChange}
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-medium appearance-none"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                {/* Activity Level */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Activity Level</label>
+                  <select
+                    name="activityLevel"
+                    value={formData.activityLevel}
+                    onChange={handleChange}
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-medium appearance-none"
+                  >
+                    <option value="Low">Low</option>
+                    <option value="Medium">Medium</option>
+                    <option value="High">High</option>
+                  </select>
+                </div>
+
+                {/* Kid Friendly */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Kid Friendly</label>
+                  <select
+                    name="kidFriendly"
+                    value={formData.kidFriendly}
+                    onChange={(e) => setFormData(prev => ({ ...prev, kidFriendly: e.target.value === 'true' }))}
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all font-medium appearance-none"
+                  >
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                  </select>
+                </div>
+
+                {/* Contact Email */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Contact Email</label>
+                  <input
+                    required
+                    type="email"
+                    name="contactEmail"
+                    value={formData.contactEmail}
+                    onChange={handleChange}
+                    placeholder="email@example.com"
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all placeholder-gray-400 font-medium"
+                  />
+                </div>
+
+                {/* Contact Phone */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 uppercase tracking-wider">Contact Phone</label>
+                  <input
+                    required
+                    type="tel"
+                    name="contactPhone"
+                    value={formData.contactPhone}
+                    onChange={handleChange}
+                    placeholder="+1 (555) 000-0000"
+                    className="w-full p-4 bg-white/50 border border-gray-200 rounded-2xl focus:ring-4 focus:ring-pink-500/10 focus:border-pink-500 outline-none transition-all placeholder-gray-400 font-medium"
+                  />
                 </div>
               </div>
 

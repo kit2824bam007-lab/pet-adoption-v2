@@ -10,6 +10,7 @@ import AddPet from './pages/AddPet';
 import SearchResults from './pages/SearchResults';
 import Adopted from './pages/Adopted';
 import PetDetails from './pages/PetDetails';
+import Chat from './pages/Chat';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -69,15 +70,19 @@ function App() {
           />
           <Route 
             path="/add-pet" 
-            element={user ? <AddPet /> : <Navigate to="/login" />} 
+            element={user ? <AddPet user={user} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/adopted" 
-            element={user ? <Adopted /> : <Navigate to="/login" />} 
+            element={user ? <Adopted user={user} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/pet/:id" 
             element={user ? <PetDetails user={user} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/messages" 
+            element={user ? <Chat user={user} /> : <Navigate to="/login" />} 
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
